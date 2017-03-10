@@ -27,70 +27,55 @@ import org.xml.sax.Attributes;
 public class XMLParser {
   
     public static XMLNode parse(File file) {
-        XMLNode root = new XMLNode();
+        XMLNode documentRoot = null;
+        Stack<XMLNode> stack = new Stack<>();
+        
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser parser = factory.newSAXParser();
             
-            DefaultHandler dh = new DefaultHandler() {
-                Stack<XMLNode> stack = new Stack<>();
-                
-                public void startDocument(String uri, String localName, String qName, Attributes attributes) {
-                    // Create root node and set name
-                    root.setName(qName);
+            DefaultHandler dh = new DefaultHandler() {               
+                @Override
+                public void startElement(String uri, String localName, String qName, Attributes attributes) {
+                    XMLNode node = new XMLNode();
+                    node.setName(qName);
                     
                     // Add attributes if any exist
                     for (int i = 0; i < attributes.getLength(); i++) {
-                        root.addAttribute(attributes.getLocalName(i), attributes.getValue(i));
+                        node.addAttribute(attributes.getLocalName(i), attributes.getValue(i));
                     }
                     
-                    // Add root node to stack
-                    stack.add(root);
+                    // Add element to stack
+                    stack.add(node);
                 }
                
                 @Override
-               public void startElement(String uri, String localName, String qName, Attributes attributes) {
-                    // Create child node and set name
-                    XMLNode child = new XMLNode();
-                    child.setName(qName);
-                    
-                    // Add attributes if any exist
-                    for (int i = 0; i < attributes.getLength(); i++) {
-                        root.addAttribute(attributes.getLocalName(i), attributes.getValue(i));
-                    }
-                    
-                    // Add child node to stack
-                    stack.add(child);
-               }
-               
-               public void endElement(String uri, String localName, String qName, Attributes attributes) {
-                   // Get current element
-                   XMLNode currentElement = stack.pop();
+                public void endElement(String uri, String localName, String qName) {
+                   // Get current element if not root
+                   if (stack.size() >= 2) {
+                        XMLNode currentElement = stack.pop();
                    
-                   // Get previous element and append current element
-                   XMLNode prevElement = stack.peek();
-                   currentElement.addElement(currentElement.getName(), currentElement);
-               }
-               
-               public XMLNode endDocument(String uri, String localName, String qName, Attributes attributes) throws Exception {
-                   return root;
-               }
-               
-                @Override
-               public void characters(char[] ch, int start, int length) throws SAXException {
-                   // Get current element from stack and add content
-                   XMLNode currentElement = stack.peek();
-                   String content = new String(ch, start, length);
-                   if (!content.equals('\n')) {
-                       currentElement.setContent(new String(ch, start, length));
+                        // Get previous element and append current element
+                        XMLNode prevElement = stack.peek();
+                        prevElement.addElement(currentElement);
                    }
-               }
+                }
+
+                @Override
+                public void characters(char[] ch, int start, int length) throws SAXException {
+                    // Get current element and set content
+                    XMLNode currentElement = stack.peek();
+                    currentElement.setContent(new String(ch, start, length));
+                }
             };
             parser.parse(file, dh);
         }
         catch (Exception ex) {
             System.out.println(ex);
         }
-        return root;
+        
+        // Root element is last remaining element on stack
+        documentRoot = stack.pop();
+        return documentRoot;
     }
 }

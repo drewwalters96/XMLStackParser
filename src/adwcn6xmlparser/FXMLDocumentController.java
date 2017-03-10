@@ -38,7 +38,8 @@ public class FXMLDocumentController implements Initializable {
         
         try {
             if (selectedFile != null) {
-                XMLParser.parse(selectedFile);
+                XMLNode resultingDOM = XMLParser.parse(selectedFile);
+                System.out.println("DOM is stored in memory as resultingDOM");
             }   
         }
         catch (Exception ex) {

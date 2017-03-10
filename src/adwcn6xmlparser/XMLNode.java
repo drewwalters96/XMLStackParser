@@ -1,12 +1,13 @@
 package adwcn6xmlparser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class XMLNode {
     private String name;
     private String content;
     private HashMap<String, String> attributes = null;
-    private HashMap<String, XMLNode> elements = null;
+    private ArrayList<XMLNode> elements = null;
     
     public String getName() {
         return name;
@@ -20,7 +21,7 @@ public class XMLNode {
         return attributes;
     }
     
-    public HashMap<String, XMLNode> getElements() {
+    public ArrayList<XMLNode> getElements() {
         return elements;
     }
     
@@ -39,10 +40,10 @@ public class XMLNode {
         attributes.put(name, content);
     }
     
-    public void addElement(String tagName, XMLNode node) {
+    public void addElement(XMLNode node) {
         if (elements == null) {
-            elements = new HashMap<>();
+            elements = new ArrayList<>();
         }
-        elements.put(name, node);
+        elements.add(node);
     }
 }
